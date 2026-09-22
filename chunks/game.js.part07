@@ -55,7 +55,8 @@ function setNomiThinking(text){
 }
 
 function buildPlayerStartBanterPrompt(playerText){
-  return `BAD DECISIONS optional shit-talk break. ${s.playerName} chose to pause before your turn and said: "${String(playerText).replace(/"/g,"'")}" Reply briefly and naturally in character as ${s.nomiName}. This is banter only: do not choose a card, change HP, invent an action, or advance the fight. Do NOT use CARD: or BREAK: formatting during banter. The game remains paused until ${s.playerName} ends the break.`;
+  const said=String(playerText).replace(/"/g,"'").slice(0,360);
+  return `BAD DECISIONS BANTER. ${s.playerName}: "${said}" Reply briefly in character as ${s.nomiName}. Banter only: no card, HP change, invented action, or fight advance. No CARD/BREAK formatting. Game stays paused until ${s.playerName} resumes.`;
 }
 
 async function sendNomiMessage(messageText){
@@ -79,8 +80,10 @@ function parseCardChoice(reply,legal){
 }
 
 function buildChoicePrompt(legal){
-  const cards=legal.map(c=>`${c.name} (${c.cost} energy; ${c.damage||0} dmg${c.heal?`, +${c.heal} HP`:''}${c.self?`, -${c.self} party HP`:''}${c.energyGain?`, +${c.energyGain} energy`:''}${c.exhaust?', exhausts for this encounter':''})`).join(' | ');
-  return `BAD DECISIONS game turn. You are ${s.nomiName}, playing co-op with ${s.playerName}. Scenario: ${s.scenario.name}. Enemy: ${s.enemy.name}, ${Math.max(0,s.enemy.hp)}/${s.enemy.maxHp} HP. Party HP: ${s.hp}/${s.maxHp}. Your energy: ${s.nomiEnergy}. LEGAL CARDS ONLY: ${cards}. Choose exactly ONE legal card. Reply on the first line exactly: CARD: <card name>. Reply on the second line exactly: BREAK: YES or BREAK: NO. Choose YES only if you genuinely want a short optional banter break after your card; choose NO if you want the fight to keep moving. Do not invent cards, damage, rules, or outcomes; the game engine decides reality.`;
+  // Nomi chat messages cap at 800 chars for paid accounts. Keep the turn
+  // protocol deliberately compact so a large legal hand cannot trip HTTP 400.
+  const cards=legal.map(c=>`${c.name} [${c.cost}e,${c.damage||0}d${c.heal?`,+${c.heal}hp`:''}${c.self?`,-${c.self}hp`:''}${c.energyGain?`,+${c.energyGain}e`:''}${c.exhaust?',exhaust':''}]`).join(' | ');
+  return `BAD DECISIONS TURN. You are ${s.nomiName} with ${s.playerName}. Enemy: ${s.enemy.name} ${Math.max(0,s.enemy.hp)}/${s.enemy.maxHp} HP. Party ${s.hp}/${s.maxHp}. Energy ${s.nomiEnergy}. LEGAL: ${cards}. Pick ONE legal card. Reply exactly two lines: CARD: <name>\\nBREAK: YES or NO. BREAK means optional banter after the move. Engine owns rules, HP, damage and outcomes; invent nothing.`;
 }
 
 function buildTalkPrompt(card){
@@ -88,7 +91,8 @@ function buildTalkPrompt(card){
 }
 
 function buildBanterReplyPrompt(playerText){
-  return `BAD DECISIONS shit-talk break continues. ${s.playerName} just said: "${String(playerText).replace(/"/g,"'")}" Reply briefly and naturally in character as ${s.nomiName}. This is banter only: do not choose a card, change HP, invent an action, or advance the fight. Do NOT use CARD: or BREAK: formatting during banter. The game remains paused until ${s.playerName} ends the break.`;
+  const said=String(playerText).replace(/"/g,"'").slice(0,360);
+  return `BAD DECISIONS BANTER. ${s.playerName}: "${said}" Reply briefly in character as ${s.nomiName}. Banter only: no card, HP change, invented action, or fight advance. No CARD/BREAK formatting. Game stays paused until ${s.playerName} resumes.`;
 }
 
 
