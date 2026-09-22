@@ -22,15 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unpack Pocket Goat
-        run: |
-          rm -rf dist
-          mkdir dist
-          unzip -q pocket-goat-v0.6.0.zip -d dist
+      - name: Rebuild game bundle
+        run: cat chunks/game.js.part* > site/game.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/bad-decisions-web-v0.6.0-pocket-goat/site
+          path: site
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4

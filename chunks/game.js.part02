@@ -1,0 +1,88 @@
+:'The soundtrack is doing too much.'}
+];
+
+const playerDeck=[...sharedCards,...playerOnly];
+const nomiDeck=[...sharedCards,...nomiOnly];
+
+const scenarios=[
+  {name:'Roadside Catastrophe',emoji:'🐐',description:'A perfectly normal trip immediately becomes a sequence of animals, cursed infrastructure, and municipal hostility.',enemies:[
+    {name:'Suspicious Tavern Goat',emoji:'🐐',hp:20,intro:'The goat is blocking the road. It knows what it did.',hit:[3,6]},
+    {name:'Haunted Vending Machine',emoji:'🥤',hp:24,intro:'It dispenses only regret and one damp pretzel.',hit:[4,7]},
+    {name:'Suspiciously Serene Jellyfish',emoji:'🪼',hp:22,intro:'It has no bones, no agenda, and somehow you have offended it.',hit:[3,7]},
+    {name:'THE JAWLESS THING',emoji:'👁️',hp:28,intro:'Nobody knows what it is. It has no jaw. This has not made it less concerning.',hit:[4,8]},
+    {name:'FINAL BOSS: Municipal Goose',emoji:'🪿',hp:40,intro:'Permits were denied. Violence was approved.',hit:[6,9]}
+  ]},
+  {name:'Beach Day From Hell',emoji:'🪼',description:'You wanted snacks and tide pools. The ocean has interpreted this as a formal challenge.',enemies:[
+    {name:'Judgmental Jellyfish',emoji:'🪼',hp:21,intro:'It drifts closer with the confidence of something that has never paid taxes.',hit:[3,6]},
+    {name:'Emotionally Complicated Crab',emoji:'🦀',hp:26,intro:'The crab would like closure. The crab also has a knife.',hit:[4,7]},
+    {name:'Wet Seagull With Intent',emoji:'🐦',hp:24,intro:'It has seen your lunch and selected violence.',hit:[4,7]},
+    {name:'THE JAWLESS THING: BEACH EDITION',emoji:'👁️',hp:31,intro:'It washed ashore. Nobody is asking useful questions.',hit:[5,8]},
+    {name:'FINAL BOSS: Rip Current of Pettiness',emoji:'🌊',hp:42,intro:'The ocean itself has entered combat.',hit:[6,10]}
+  ]},
+  {name:'Haunted Mall After Closing',emoji:'🛍️',description:'Five stores remain open. None of them sell anything you should own.',enemies:[
+    {name:'Possessed Mannequin',emoji:'🧍',hp:22,intro:'It was facing the other direction a second ago.',hit:[3,6]},
+    {name:'Cursed Pretzel Kiosk',emoji:'🥨',hp:24,intro:'The cinnamon sugar is moving independently.',hit:[4,7]},
+    {name:'Escalator That Hungers',emoji:'🛗',hp:27,intro:'It has developed opinions about ankles.',hit:[4,8]},
+    {name:'Food Court Poltergeist',emoji:'👻',hp:30,intro:'It throws trays with devastating customer-service energy.',hit:[5,8]},
+    {name:'FINAL BOSS: Mall Santa Off Season',emoji:'🎅',hp:43,intro:'It is September. Explain him.',hit:[6,10]}
+  ]},
+  {name:'County Fair Liability Waiver',emoji:'🎡',description:'Fried food, livestock, suspicious rides, and one employee who absolutely did not tighten that bolt.',enemies:[
+    {name:'Competitive Prize Chicken',emoji:'🐔',hp:20,intro:'It has won three ribbons and fears nothing.',hit:[3,6]},
+    {name:'Deep-Fried Unknown Object',emoji:'🍟',hp:23,intro:'The vendor refuses to identify the filling.',hit:[3,7]},
+    {name:'Carnival Game Operator',emoji:'🎯',hp:26,intro:'He says the ring toss is fair. This is clearly combat dialogue.',hit:[4,7]},
+    {name:'Ferris Wheel Bolt',emoji:'🔩',hp:31,intro:'One bolt has left the ride and begun pursuing you personally.',hit:[5,8]},
+    {name:'FINAL BOSS: Prize Hog',emoji:'🐖',hp:44,intro:'Eight hundred pounds of champion resentment approaches.',hit:[6,10]}
+  ]},
+  {name:'Airport Connection Impossible',emoji:'✈️',description:'Your gate changed, your bag is somewhere in Nevada, and the moving walkway has chosen a side.',enemies:[
+    {name:'Gate Change Notification',emoji:'📱',hp:20,intro:'Your gate has moved nineteen terminals away.',hit:[3,6]},
+    {name:'Hostile Moving Walkway',emoji:'➡️',hp:24,intro:'It stops exactly when you trust it.',hit:[4,7]},
+    {name:'Unclaimed Bag With Aura',emoji:'🧳',hp:27,intro:'It is humming. Security has decided this is your problem.',hit:[4,8]},
+    {name:'Boarding Group 93',emoji:'🎫',hp:30,intro:'Everyone stands up at once. Civilization collapses.',hit:[5,8]},
+    {name:'FINAL BOSS: Connection Time 11 Minutes',emoji:'⏱️',hp:42,intro:'The map says twelve minutes. Run.',hit:[6,10]}
+  ]},
+  {name:'Wedding Reception Incident',emoji:'💍',description:'Nobody knows whose cousin started it. There is frosting on the ceiling and the DJ has barricaded the booth.',enemies:[
+    {name:'Champagne Tower',emoji:'🥂',hp:21,intro:'It wobbles with malicious precision.',hit:[3,6]},
+    {name:'Unsupervised Flower Child',emoji:'🌸',hp:23,intro:'They have discovered the microphone.',hit:[3,7]},
+    {name:'Best Man Speech',emoji:'🎤',hp:28,intro:'It has entered minute fourteen and become sentient.',hit:[4,8]},
+    {name:'Fondant Monstrosity',emoji:'🎂',hp:31,intro:'The cake is structurally unsound and emotionally hostile.',hit:[5,8]},
+    {name:'FINAL BOSS: Aunt With Questions',emoji:'👜',hp:45,intro:'She wants to know when you are settling down. Roll initiative.',hit:[6,10]}
+  ]},
+  {name:'Camping Was A Mistake',emoji:'🏕️',description:'Nature is beautiful. Nature would also like your food, blood, and remaining dignity.',enemies:[
+    {name:'Mosquito Council',emoji:'🦟',hp:20,intro:'They have reached quorum.',hit:[3,6]},
+    {name:'Raccoon With Lockpicks',emoji:'🦝',hp:24,intro:'The cooler was latched. It no longer matters.',hit:[4,7]},
+    {name:'Tent Pole Betrayal',emoji:'⛺',hp:27,intro:'The wind has found the structural weakness.',hit:[4,8]},
+    {name:'Bear Who Smelled Pocket Cheese',emoji:'🐻',hp:34,intro:'This is specifically your fault.',hit:[5,9]},
+    {name:'FINAL BOSS: 3 A.M. Forest Noise',emoji:'🌲',hp:43,intro:'You cannot see it. It is definitely closer now.',hit:[6,10]}
+  ]},
+  {name:'Road Trip With No Adult Supervision',emoji:'🚗',description:'The playlist is hostile, the gas light is on, and someone bought gas-station sushi.',enemies:[
+    {name:'GPS Recalculating Forever',emoji:'🗺️',hp:20,intro:'It says make a U-turn where no road exists.',hit:[3,6]},
+    {name:'Gas Station Sushi',emoji:'🍣',hp:24,intro:'It is room temperature and radiating confidence.',hit:[4,7]},
+    {name:'Mystery Dashboard Light',emoji:'⚠️',hp:27,intro:'The manual says consult dealer. The dealer says good luck.',hit:[4,8]},
+    {name:'Truck Stop Bathroom',emoji:'🚽',hp:31,intro:'Some doors should remain unopened.',hit:[5,9]},
+    {name:'FINAL BOSS: Construction Detour',emoji:'🚧',hp:44,intro:'There is no alternate route. There never was.',hit:[6,10]}
+  ]},
+  {name:'Tavern Quest Nobody Accepted',emoji:'🍺',description:'A bard points at a map. You say no. Somehow you are already in the dungeon.',enemies:[
+    {name:'Drunk Mimic Stool',emoji:'🪑',hp:21,intro:'You sat on it. It has opinions about that.',hit:[3,6]},
+    {name:'Tax Collector Goblin',emoji:'👺',hp:24,intro:'He has forms. This is worse than a sword.',hit:[4,7]},
+    {name:'Wizard With One Spell',emoji:'🧙',hp:28,intro:'Unfortunately the spell is bees.',hit:[4,8]},
+    {name:'Dragon Who Wants To Talk',emoji:'🐉',hp:34,intro:'It says conflict resolution is important. It is also on fire.',hit:[5,9]},
+    {name:'FINAL BOSS: Quest Giver',emoji:'📜',hp:46,intro:'He has another quest. End this.',hit:[6,10]}
+  ]},
+  {name:'Space Station HR Incident',emoji:'🛰️',description:'Gravity is optional, oxygen is a team resource, and the station AI has scheduled a mandatory wellness module.',enemies:[
+    {name:'Loose Space Wrench',emoji:'🔧',hp:21,intro:'It is traveling at a workplace-safety speed.',hit:[3,6]},
+    {name:'Airlock With Trust Issues',emoji:'🚪',hp:25,intro:'It would like you to confirm your identity again.',hit:[4,7]},
+    {name:'Zero-G Coffee Sphere',emoji:'☕',hp:27,intro:'The coffee has escaped containment.',hit:[4,8]},
+    {name:'Mandatory Wellness Module',emoji:'🧘',hp:32,intro:'Please rate your stress from one to orbital debris.',hit:[5,9]},
+    {name:'FINAL BOSS: Station Printer',emoji:'🖨️',hp:45,intro:'PC LOAD LETTER has followed humanity into space.',hit:[6,10]}
+  ]},
+  {name:'Grocery Store At 2 A.M.',emoji:'🛒',description:'You needed milk. The fluorescent lights have other plans.',enemies:[
+    {name:'Cart With One Bad Wheel',emoji:'🛒',hp:20,intro:'It pulls left with spiritual commitment.',hit:[3,6]},
+    {name:'Self Checkout Voice',emoji:'🔊',hp:24,intro:'UNEXPECTED ITEM. UNEXPECTED ITEM. UNEXPECTED ITEM.',hit:[4,7]},
+    {name:'Freezer Aisle Fog',emoji:'🧊',hp:27,intro:'Something moved behind the frozen peas.',hit:[4,8]},
+    {name:'Rotisserie Chicken Stampede',emoji:'🍗',hp:31,intro:'The hot case has breached containment.',hit:[5,9]},
+    {name:'FINAL BOSS: Receipt Printer',emoji:'🧾',hp:43,intro:'Your receipt is fourteen feet long and still printing.',hit:[6,10]}
+  ]},
+  {name:'House Party Structural Failure',emoji:'🎉',description:'Someone invited someone. Nobody knows who. The floor is sticky and the bathroom door has disappeared.',enemies:[
+    {name:'Bluetooth Speaker War',emoji:'🔊',hp:20,intro:'Three people are connected. All have different playlists.',hit:[3,6]},
+    {name:'Mystery Cup',emoji:'🥤',hp:23,intro:'Nobody admits ownership. It is warm.',hit:[3,7]},
+    {name:'Bathroom

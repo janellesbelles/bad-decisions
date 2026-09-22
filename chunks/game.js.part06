@@ -1,0 +1,222 @@
+e API ate my comeback. I am blaming the ${s.enemy.name}.`;
+        log(`⚠️ Banter reply failed: ${escapeHTML(err.message)}.`);
+      }
+    }else{
+      const mock=[
+        'That was weak. Try again with commitment.',
+        'You are very brave for someone standing next to me during this.',
+        'Noted. Incorrect, but noted.',
+        'Keep talking. I am absolutely saving this for later.',
+        'Bold words from the person who started this disaster.'
+      ];
+      reply=mock[Math.floor(Math.random()*mock.length)];
+    }
+    addBubble(name,reply,'nomiBubble');
+    log(`💬 <b>${escapeHTML(name)}:</b> ${escapeHTML(reply)}`);
+    waiting=false;
+    input.disabled=false;
+    send.disabled=false;
+    input.focus();
+  }
+
+  send.onclick=sendReply;
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      sendReply();
+    }
+  });
+  done.onclick=()=>{
+    if(waiting)return;
+    overlay.remove();
+    if(typeof onDone==='function') onDone();
+  };
+
+  composer.append(input,send);
+  overlay.append(label,transcript,sub,composer,actions);
+  document.body.appendChild(overlay);
+  setTimeout(()=>input.focus(),50);
+}
+
+function log(t){
+  $('log').insertAdjacentHTML('beforeend',`<p>${t}</p>`);
+  $('log').scrollTop=$('log').scrollHeight;
+}
+
+function renderScenarioPicker(){
+  const sc=scenarios[selectedScenario];
+  $('scenarioCount').textContent=`${selectedScenario+1} / ${scenarios.length}`;
+  $('scenarioEmoji').textContent=sc.emoji;
+  $('scenarioName').textContent=sc.name;
+  $('scenarioDescription').textContent=sc.description;
+  $('scenarioPreview').innerHTML=sc.enemies.map(e=>`<span>${e.emoji} ${e.name.replace('FINAL BOSS: ','')}</span>`).join('');
+}
+
+function changeScenario(delta){
+  selectedScenario=(selectedScenario+delta+scenarios.length)%scenarios.length;
+  renderScenarioPicker();
+}
+
+function start(){
+  let nomiName='Mock Freddy',nomiUuid=null,mode='mock';
+  if(apiState.connected){
+    const select=$('nomiSelect');
+    const chosen=apiState.nomis.find(n=>n.uuid===select.value);
+    if(!chosen){setApiStatus('Choose a Nomi before starting.','bad');return;}
+    nomiName=chosen.name; nomiUuid=chosen.uuid; mode='real';
+  }else if(apiState.mock){
+    nomiName='Freddy';
+  }else{
+    setApiStatus('Connect a companion or choose Mock Companion mode first.','bad');
+    return;
+  }
+  s={
+    playerName:$('playerName').value.trim()||'Player',
+    nomiName,nomiUuid,mode,provider:apiState.provider||'nomi',
+    scenarioIndex:selectedScenario,scenario:scenarios[selectedScenario],
+    hp:42,maxHp:42,wins:0,enemyIndex:0,enemy:null,
+    playerEnergy:3,nomiEnergy:3,maxEnergy:5,turn:'player',busy:false,
+    nomiRequestToken:0,battleResolved:false,lastResolvedAction:null,pendingEncounterUpdate:null,pendingContinuity:null
+  };
+  $('setup').classList.add('hidden');
+  $('game').classList.remove('hidden');
+  nextEnemy();
+}
+
+function nextEnemy(){
+  const e=s.scenario.enemies[Math.min(s.enemyIndex,s.scenario.enemies.length-1)];
+  s.enemy={...e,maxHp:e.hp};
+  if(s.pendingEncounterUpdate){
+    queueContinuityUpdate(s.pendingEncounterUpdate,s.enemy,false);
+    s.pendingEncounterUpdate=null;
+  }
+  s.battleResolved=false;
+  s.playerEnergy=3;
+  s.nomiEnergy=3;
+  s.playerExhausted=[];
+  s.nomiExhausted=[];
+  s.playerHand=drawHand(playerDeck,s.playerExhausted);
+  s.nomiHand=drawHand(nomiDeck,s.nomiExhausted);
+  s.turn='player';
+  s.busy=false;
+  $('log').innerHTML='';
+  log(`<b>${e.intro}</b>`);
+  log(`${escapeHTML(s.playerName)} and ${escapeHTML(s.nomiName)} have elected to handle this together. This was the first bad decision.`);
+  log(`⚡ <b>ENERGY RULE:</b> Energy carries between rounds. After the enemy acts, each player regains +2 energy up to ${s.maxEnergy}. Expensive cards mean fewer expensive cards later.`);
+  log(`🐐 <b>TACTICAL GOAT</b> now costs 4 energy and exhausts after use for the rest of the encounter. The goat union won.`);
+  render();
+}
+
+function drawHand(deck,exhausted=[]){
+  const available=deck.filter(c=>!exhausted.includes(c.name));
+  const pool=available.length>=6?available:deck;
+  return [...pool].sort(()=>Math.random()-.5).slice(0,6).map(c=>({...c}));
+}
+
+function render(){
+  $('party').textContent=`${s.scenario.emoji} ${s.playerName} + ${s.nomiName} · ${s.scenario.name}`;
+  $('hp').textContent=s.hp;
+  $('wins').textContent=s.wins;
+  $('playerEnergy').textContent=s.playerEnergy;
+  $('nomiEnergy').textContent=s.nomiEnergy;
+  $('playerTitle').textContent=`${s.playerName}'s Turn`;
+  $('nomiTitle').textContent=`${s.nomiName}'s Turn`;
+  $('enemy').innerHTML=`<div class='enemyTitle'>${s.enemy.emoji} ${s.enemy.name}</div><div class='enemyHp'>HP: <b>${Math.max(0,s.enemy.hp)}</b> / ${s.enemy.maxHp}</div>`;
+
+  const banner=$('turnBanner');
+  if(s.turn==='player') banner.innerHTML=`🫵 <b>${escapeHTML(s.playerName)}, YOU'RE UP.</b> Cause a problem.`;
+  else if(s.turn==='nomi') banner.innerHTML=s.mode==='real'?`🧠 <b>${escapeHTML(s.nomiName)}'S TURN.</b> Actual ${providerLabel(s.provider)} is choosing...`:`🤖 <b>${escapeHTML(s.nomiName)}'S TURN.</b> Mock companion is making a choice...`;
+  else banner.innerHTML=`☠️ <b>ENEMY TURN.</b> Consequences are arriving.`;
+
+  const playerHand=$('playerHand');
+  playerHand.innerHTML='';
+  for(const c of s.playerHand){
+    const disabled=s.turn!=='player'||s.busy||c.cost>s.playerEnergy;
+    playerHand.appendChild(makeCard(c,disabled,()=>playPlayer(c)));
+  }
+
+  const nomiHand=$('nomiHand');
+  nomiHand.innerHTML='';
+  for(const c of s.nomiHand){
+    const d=makeCard(c,true,()=>{});
+    if(s.turn!=='nomi') d.classList.add('dim');
+    nomiHand.appendChild(d);
+  }
+
+  $('playerArea').classList.toggle('activeTurn',s.turn==='player');
+  $('nomiArea').classList.toggle('activeTurn',s.turn==='nomi');
+  if(s.turn==='nomi') $('nomiThinking').textContent=s.mode==='real'?`${s.nomiName} is reading the legal cards and deciding what terrible thing to do...`:'Mock companion is choosing from the visible legal cards...';
+  else $('nomiThinking').textContent='Waiting for your turn to finish...';
+}
+
+function makeCard(c,disabled,onClick){
+  const d=document.createElement('div');
+  d.className='card'+(disabled?' disabled':'');
+  d.innerHTML=`<span class='cost'>${c.cost}⚡</span><h3>${c.name}</h3><div>${c.text}</div><div class='flavor'>${c.flavor}${c.exhaust?' · EXHAUSTS':''}</div>`;
+  if(!disabled)d.onclick=onClick;
+  return d;
+}
+
+function resolveCard(actor,c,opts={}){
+  const enemyHpBefore=s.enemy.hp;
+  s.enemy.hp-=c.damage||0;
+  s.lastResolvedAction={
+    actor,
+    cardName:c.name,
+    damage:c.damage||0,
+    enemyName:s.enemy.name,
+    enemyHpBefore,
+    enemyHpAfter:Math.max(0,s.enemy.hp)
+  };
+  s.hp=Math.min(s.maxHp,s.hp+(c.heal||0));
+  s.hp-=c.self||0;
+  if(c.energyGain){
+    if(actor===s.playerName)s.playerEnergy=Math.min(s.maxEnergy,s.playerEnergy+c.energyGain);
+    else s.nomiEnergy=Math.min(s.maxEnergy,s.nomiEnergy+c.energyGain);
+  }
+  log(`<b>${escapeHTML(actor)} played ${escapeHTML(c.name)}.</b> ${c.damage||0} damage.${c.heal?` Party healed ${c.heal}.`:''}${c.self?` Party took ${c.self} damage from consequences.`:''}${c.energyGain?` Gained ${c.energyGain} energy.`:''}`);
+  if(c.name==='HOTDOG AFFIRMATION'){
+    const a=affirmations[Math.floor(Math.random()*affirmations.length)];
+    log(`🌭 <b>${a}</b>`);
+    flash(`🌭 <b>${escapeHTML(actor.toUpperCase())} OPENED THE HOTDOG:</b><br><span class='affirmationText'>${a}</span><br><small>+${c.heal} HP · ${c.damage} emotional damage</small>`,{hotdog:true,affirmation:a,onDismiss:opts.onDismiss});
+  }else{
+    flash(`<b>${escapeHTML(actor)}: ${escapeHTML(c.name)}</b><br>${c.damage||0} damage${c.heal?` · +${c.heal} party HP`:''}${c.energyGain?` · +${c.energyGain} energy`:''}`,{dismiss:!!opts.dismiss,dismissText:opts.dismissText,onDismiss:opts.onDismiss});
+  }
+}
+
+function playPlayer(c){
+  if(s.turn!=='player'||s.busy||c.cost>s.playerEnergy)return;
+  s.busy=true;
+  s.playerEnergy-=c.cost;
+  s.playerHand=s.playerHand.filter(x=>x!==c);
+  if(c.exhaust && !s.playerExhausted.includes(c.name))s.playerExhausted.push(c.name);
+  const continueAfterHumanCard=()=>{
+    queueHumanTurnUpdate(c);
+    if(checkBattleEnd())return;
+    humanBreakChoice(()=>{
+      s.turn='nomi';
+      s.busy=false;
+      render();
+      setTimeout(nomiTurn,500);
+    });
+  };
+  resolveCard(s.playerName,c,{dismiss:true,onDismiss:continueAfterHumanCard});
+  render();
+}
+
+function mockChoice(legal){
+  const chaotic=Math.random()<0.28;
+  return chaotic?legal[Math.floor(Math.random()*legal.length)]:[...legal].sort((a,b)=>(b.damage||0)-(a.damage||0))[0];
+}
+
+
+function humanBreakChoice(onContinue){
+  const overlay=document.createElement('div');
+  overlay.className='talkFlash';
+  const label=document.createElement('div');
+  label.className='talkName';
+  label.textContent=`OPTIONAL SHIT-TALK BREAK · ${s.playerName.toUpperCase()}`;
+  const body=document.createElement('div');
+  body.className='talkText';
+  body.textContent=`Want to talk shit before ${s.nomiName}'s turn, or keep the fight moving?`;
+  const sub=document.

@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>Bad Decisions: Pocket Goat</title>
+  <link rel='manifest' href='manifest.webmanifest'>
+  <meta name='theme-color' content='#101714'>
+  <meta name='apple-mobile-web-app-capable' content='yes'>
+  <meta name='apple-mobile-web-app-status-bar-style' content='black-translucent'>
+  <meta name='apple-mobile-web-app-title' content='Bad Decisions'>
+  <link rel='apple-touch-icon' href='icon-192.svg'>
+  <link rel='stylesheet' href='style.css'>
+</head>
+<body>
+<main>
+  <header>
+    <h1>BAD DECISIONS</h1>
+    <p class='tag'>The computer controls reality. Your companion controls itself. You cause problems together.</p>
+  </header>
+
+  <section id='setup' class='panel'>
+    <h2>Assemble the Disaster Team</h2>
+    <label>Your name <input id='playerName' value='' placeholder='Your name' maxlength='24'></label>
+    <div class='apiBox'>
+      <div class='apiTitle'>CONNECT YOUR COMPANION</div>
+
+      <label>Platform
+        <select id='providerSelect'>
+          <option value='nomi'>Nomi</option>
+          <option value='kindroid'>Kindroid</option>
+        </select>
+      </label>
+
+      <label>API key
+        <div class='apiRow'>
+          <input id='apiKey' type='password' autocomplete='off' placeholder='Paste your Nomi API key here'>
+          <button id='connectNomi' type='button' class='connectButton'>CONNECT NOMI</button>
+        </div>
+      </label>
+
+      <div id='kindroidFields' class='hidden providerFields'>
+        <label>Kindroid AI ID
+          <input id='kindroidId' autocomplete='off' placeholder='Paste the AI ID from Kindroid Profile Settings'>
+        </label>
+        <label>Kindroid name
+          <input id='kindroidName' maxlength='40' placeholder='What should we call this little menace?'>
+        </label>
+      </div>
+
+      <div id='apiStatus' class='apiStatus'>Not connected. Your key stays in this app session only. Find it in Nomi → Profile → Integration.</div>
+
+      <label id='nomiSelectLabel' class='hidden'>Choose your Nomi
+        <select id='nomiSelect'></select>
+      </label>
+
+      <button id='mockMode' type='button' class='secondary compact'>USE MOCK COMPANION INSTEAD</button>
+    </div>
+    <div class='scenarioPicker'>
+      <div class='scenarioTop'>
+        <button id='scenarioPrev' class='scenarioArrow' aria-label='Previous scenario'>◀</button>
+        <div class='scenarioCount' id='scenarioCount'></div>
+        <button id='scenarioNext' class='scenarioArrow' aria-label='Next scenario'>▶</button>
+      </div>
+      <div class='scenarioCard'>
+        <div class='scenarioEmoji' id='scenarioEmoji'>🐐</div>
+        <div>
+          <div class='scenarioLabel'>CHOOSE YOUR BAD DECISION</div>
+          <h3 id='scenarioName'></h3>
+          <p id='scenarioDescription'></p>
+          <div class='scenarioPreview' id='scenarioPreview'></div>
+        </div>
+      </div>
+    </div>
+    <button id='start'>START THIS DISASTER</button>
+    <p class='small'>POCKET GOAT v0.6.0 WEB TEST · 30 disasters · giant card pile · persistent energy · goat law · Nomi + Kindroid via relay.</p>
+  </section>
+
+  <section id='game' class='hidden'>
+    <div class='stats'>
+      <span id='party'></span>
+      <span>❤️ <b id='hp'></b></span>
+      <span>🏆 <b id='wins'></b>/5</span>
+    </div>
+
+    <div id='turnBanner' class='turnBanner'></div>
+    <div id='actionFlash' class='actionFlash hidden'></div>
+
+    <div class='panel'>
+      <div id='enemy'></div>
+      <div id='log' class='log'></div>
+    </div>
+
+    <section id='playerArea' class='turnArea'>
+      <div class='turnHeader'>
+        <h2 id='playerTitle'>Your Turn</h2>
+        <span>⚡ <b id='playerEnergy'></b></span>
+      </div>
+      <div id='playerHand' class='hand'></div>
+    </section>
+
+    <section id='nomiArea' class='turnArea nomiArea'>
+      <div class='turnHeader'>
+        <h2 id='nomiTitle'>Nomi Turn</h2>
+        <span>⚡ <b id='nomiEnergy'></b></span>
+      </div>
+      <div id='nomiThinking' class='nomiThinking'>Waiting for your turn...</div>
+      <div id='nomiHand' class='hand'></div>
+    </section>
+
+    <button id='newRun' class='secondary'>ABANDON RUN</button>
+  </section>
+</main>
+<script src='config.js'></script>
+<script src='game.js'></script>
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+createElement('div');
+  sub.className='talkMeta';
+  sub.textContent='No forced banter. You choose when the nonsense happens.';
+  const actions=document.createElement('div');
+  actions.className='talkActions';
+  const talk=document.createElement('button');
+  talk.textContent='TALK SHIT';
+  const move=document.createElement('button');
+  move.textContent=`LET ${s.nomiName.toUpperCase()} PLAY`;
+  move.onclick=()=>{overlay.remove(); onContinue();};
+  talk.onclick=()=>{
+    overlay.remove();
+    interactiveTalkBreak(s.nomiName,null,onContinue,{playerStarts:true});
+  };
+  actions.append(talk,move);
+  overlay.append(label,body,sub,actions);
+  document.body.appendChild(overlay);
+}
+
+function parseBreakChoice(reply){
+  const m=String(reply||'').match(/BREAK\s*:\s*(YES|NO)/i);
+  return m ? m[1].toUpperCase()==='YES' : false;
+}
+
+function extractTurnComment(reply){
+  const lines=String(reply||'').split(/\r?\n/);
+  const extras=lines.filter(line=>{
+    const t=line.trim();
+    if(!t)return false;
+    if(/^CARD\s*:/i.test(t))return false;
+    if(/^BREAK\s*:/i.test(t))return false;
+    return true;
+  });
+  return extras.join(' ').trim();
+}
+
+function cleanNomiDisplayText(reply){
+  let text=String(reply||'').trim();
+  if(!text)return '';
+  // If protocol and commentary arrive on one line, preserve everything after BREAK: YES/NO.
+  text=text.replace(/^\s*CARD\s*:[^\n\r]*?\s+BREAK\s*:\s*(?:YES|NO)\s*/i,'');
+  // Normal two-line protocol: remove the CARD line, then strip only the BREAK prefix.
+  text=text.replace(/^\s*CARD\s*:[^\n\r]*(?:\r?\n|$)/i,'');
+  text=text.replace(/^\s*BREAK\s*:\s*(?:YES|NO)\s*/i,'');
+  return text.trim();
+}
+
+function sleep(ms){
+  return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+function setNomiThinking(text){
+  const el=$('nomiThinking');
+  if(el)el.textContent=text;
+}
+
+function buildPlayerStartBanterPrompt(playerText){
+  return `BAD DECISIONS optional shit-talk break. ${s.playerName} chose to pause before your turn and said: "${String(playerText).replace(/"/g,"'")}" Reply briefly and naturally in character as ${s.nomiName}. This is banter only: do not choose a card, change HP, invent an action, or advance the fight. Do NOT use CARD: or BREAK: formatting during banter. The game remains paused until ${s.playerName} ends the break.`;
+}
+
+async function sendNomiMessage(messageText){
+  if(s.provider==='kindroid'){
+    return await kindroidSend(apiState.key,s.nomiUuid,messageText);
+  }
+  const data=await nomiFetch(`/nomis/${encodeURIComponent(s.nomiUuid)}/chat`,{
+    method:'POST',
+    body:JSON.stringify({messageText})
+  });
+  return data?.replyMessage?.text||'';
+}
+
+function parseCardChoice(reply,legal){
+  const upper=String(reply||'').toUpperCase();
+  const cardLine=upper.match(/CARD\s*:\s*([^\n\r]+)/)?.[1]||'';
+  let found=legal.find(c=>cardLine.includes(c.name.toUpperCase()));
+  if(found)return found;
+  found=legal.find(c=>upper.includes(c.name.toUpperCase()));
+  return found||null;
+}
+
+function buildChoicePrompt(legal){
+  const cards=legal.map(c=>`${c.name} (${c.cost} energy; ${c.damage||0} dmg${c.heal?`, +${c.heal} HP`:''}${c.self?`, -${c.self} party HP`:''}${c.energyGain?`, +${c.energyGain} energy`:''}${c.exhaust?', exhausts for this encounter':''})`).join(' | ');
+  return `BAD DECISIONS game turn. You are ${s.nomiName}, playing co-op with ${s.playerName}. Scenario: ${s.scenario.name}. Enemy: ${s.enemy.name}, ${Math.max(0,s.enemy.hp)}/${s.enemy.maxHp} HP. Party HP: ${s.hp}/${s.maxHp}. Your energy: ${s.nomiEnergy}. LEGAL CARDS ONLY: ${cards}. Choose exactly ONE legal card. Reply on the first line exactly: CARD: <card name>. Reply on the second line exactly: BREAK: YES or BREAK: NO. Choose YES only if you genuinely want a short optional banter break after your card; choose NO if you want the fight to keep moving. Do not invent cards, damage, rules, or outcomes; the game engine decides reality.`;
+}
+
+function buildTalkPrompt(card){
+  return `BAD DECISIONS shit-talk break. You just played ${card.name} against ${s.enemy.name}. Engine result: ${card.damage||0} damage${card.heal?`, party healed ${card.heal}`:''}${card.self?`, party hurt ${card.self}`:''}. Enemy now ${Math.max(0,s.enemy.hp)}/${s.enemy.maxHp} HP; party ${Math.max(0,s.hp)}/${s.maxHp} HP. Say ONE short in-character comment to ${s.playerName} about what just happened. Banter/gloating/complaining is welcome. Do not choose another card or invent a new game action. Do NOT use CARD: or BREAK: formatting in this comment.`;
+}
+
+function buildBanterReplyPrompt(playerText){
+  return `BAD DECISIONS shit-talk break continues. ${s.playerName} just said: "${String(playerText).replace(/"/g,"'")}" Reply briefly and naturally in character as ${s.nomiName}. This is banter only: do not choose a card, change HP, invent an action, or advance the fight. Do NOT use CARD: or BREAK: formatting during banter. The game remains paused until ${s.playerName} ends the break.`;
+}
+
+
+function buildEncounterUpdatePrompt(previous,newEnemy,isFinal=false){
+  const finisher=previous?.finisher||{};
+  if(isFinal){
+    return `BAD DECISIONS encounter update. ${finisher.actor||'The disaster team'} defeated ${previous.enemy.name}${finisher.cardName?` using ${finisher.cardName}`:''}. That was the final encounter. The run is over and the team survived. This is a continuity update only. Do not choose another card, change HP, or invent a new action. Do NOT use CARD: or BREAK: formatting. No response is required; if you reply, keep it to one brief in-character acknowledgement.`;
+  }
+  return `BAD DECISIONS encounter update. ${finisher.actor||'The disaster team'} defeated ${previous.enemy.name}${finisher.cardName?` using ${finisher.cardName}`:''}. That encounter is over. NEW ENCOUNTER: ${newEnemy.name}, ${newEnemy.hp}/${newEnemy.maxHp} HP. ${s.playerName} goes first. This is a continuity update only. Do not choose a card, change HP, or invent an action. Do NOT use CARD: or BREAK: formatting. No response is required; if you reply, keep it to one brief in-character acknowledgement.`;
+}
+
+function queueNomiStateMessage(message,onSuccess,onFailureLabel='state update'){
+  if(s.mode!=='real' || !s.nomiUuid)return Promise.resolve();
+  const previous=s.pendingContinuity;
+  const job=(async()=>{
+    try{
+      if(previous){
+        try{ await previous; }catch(_e){}
+      }
+      await sendNomiMessage(message);
+      if(typeof onSuccess==='function') onSuccess();
+    }catch(err){
+      log(`⚠️ Could not send ${escapeHTML(onFailureLabel)} to ${escapeHTML(s.nomiName)}: ${escapeHTML(err.message)}.`);
+    }
+  })();
+  s.pendingContinuity=job;
+  job.finally(()=>{
+    if(s.pendingContinuity===job)s.pendingContinuity=null;
+  });
+  return job;
+}
+
+function queueContinuityUpdate(previous,newEnemy,isFinal=false){
+  if(!previous)return;
+  const message=buildEncounterUpdatePrompt(previous,newEnemy,isFinal);
+  return queueNomiStateMessage(
+    message,
+    ()=>{
+      if(isFinal){
+        log(`📡 <b>${escapeHTML(s.nomiName)} was told the run is over</b> and who landed the final blow.`);
+      }else{
+        log(`📡 <b>${escapeHTML(s.nomiName)} was caught up:</b> ${escapeHTML(previous.enemy.name)} is defeated; ${escapeHTML(newEnemy.name)} is next.`);
+      }
+    },
+    'encounter continuity update'
+  );
+}
+
+function buildHumanTurnUpdatePrompt(card){
+  const resultBits=[
+    `${s.playerName} played ${card.name}.`,
+    `${card.damage||0} damage.`,
+    card.heal?`Party healed ${card.heal}.`:'',
+    card.self?`Party took ${card.self} damage from consequences.`:''
+  ].filter(Boolean).join(' ');
+  const defeated=s.enemy.hp<=0;
+  return `BAD DECISIONS teammate update. ${resultBits} Enemy: ${s.enemy.name}, ${Math.max(0,s.enemy.hp)}/${s.enemy.maxHp} HP. Party HP: ${Math.max(0,s.hp)}/${s.maxHp}. ${s.playerName} energy remaining: ${s.playerEnergy}/${s.maxEnergy}.${defeated?' This defeated the enemy.':''} This is game-state continuity so you know exactly what your teammate did before your turn. Do not choose a card yet, do not change HP, and do not invent an action. Do NOT use CARD: or BREAK: formatting. No response is required; if you reply, keep it to one very brief in-character acknowledgement.`;
+}
+
+function queueHumanTurnUpdate(card){
+  if(s.mode!=='real' || !s.nomiUuid)return Promise.resolve();
+  const defeated=s.enemy.hp<=0;
+  return queueNomiStateMessage(
+    buildHumanTurnUpdatePrompt(card),
+    ()=>log(`📡 <b>${escapeHTML(s.nomiName)} was told what ${escapeHTML(s.playerName)} played:</b> ${escapeHTML(card.name)}${defeated?' (final blow)':''}.`),
+    'teammate move update'
+  );
+}
+
+function buildNomiTurnResultPrompt(card){
+  const resultBits=[
+    `You played ${card.name}.`,
+    `${card.damage||0} damage.`,
+    card.heal?`Party healed ${card.heal}.`:'',
+    card.self?`Party took ${card.self} damage from consequences.`:''
+  ].filter(Boolean).join(' ');
+  const defeated=s.enemy.hp<=0;
+  return `BAD DECISIONS move result. ${resultBits} Enemy: ${s.enemy.name}, ${Math.max(0,s.enemy.hp)}/${s.enemy.maxHp} HP. Party HP: ${Math.max(0,s.hp)}/${s.maxHp}. You

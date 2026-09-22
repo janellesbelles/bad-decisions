@@ -1,0 +1,255 @@
+plus AI ID. Pocket Goat keeps them in this browser session and uses your configured relay for provider calls.');
+  }else{
+    setApiStatus('Not connected. Pocket Goat keeps the key in this browser session and sends it through your configured relay only when talking to the companion. Find the Nomi key in Profile → Integration.');
+  }
+}
+
+async function kindroidValidate(apiKey,aiId){
+  if(isTauriDesktop()){
+    return await window.__TAURI__.core.invoke('validate_kindroid',{apiKey,aiId});
+  }
+
+  return await relayCall({provider:'kindroid',action:'validate',apiKey,companionId:aiId});
+}
+
+async function kindroidSend(apiKey,aiId,messageText){
+  if(isTauriDesktop()){
+    return await window.__TAURI__.core.invoke('send_kindroid_message',{apiKey,aiId,messageText});
+  }
+
+  const data=await relayCall({provider:'kindroid',action:'send',apiKey,companionId:aiId,messageText});
+  return data.reply||data.text||data.raw||'';
+}
+
+async function connectNomi(){
+  const provider=$('providerSelect').value;
+  const key=$('apiKey').value.trim();
+  if(!key){
+    setApiStatus(`Paste your ${providerLabel(provider)} API key first, tiny criminal.`,'bad');
+    return;
+  }
+
+  apiState.provider=provider;
+  apiState.key=key;
+  apiState.mock=false;
+
+  const btn=$('connectNomi');
+  btn.disabled=true;
+  btn.textContent='CONNECTING…';
+
+  try{
+    if(provider==='kindroid'){
+      const aiId=$('kindroidId').value.trim();
+      const name=$('kindroidName').value.trim();
+      if(!aiId) throw new Error('Paste the Kindroid AI ID from Profile Settings');
+      if(!name) throw new Error('Give this Kindroid a name so the game knows what to call them');
+
+      setApiStatus(`Checking that ${name} exists without bothering them in chat…`);
+      await kindroidValidate(key,aiId);
+
+      apiState.connected=true;
+      apiState.kindroidId=aiId;
+      apiState.kindroidName=name;
+      apiState.nomis=[{uuid:aiId,name}];
+
+      const select=$('nomiSelect');
+      select.innerHTML='';
+      const opt=document.createElement('option');
+      opt.value=aiId;
+      opt.textContent=name;
+      select.appendChild(opt);
+      select.value=aiId;
+      $('nomiSelectLabel').classList.add('hidden');
+
+      try{
+        sessionStorage.setItem('badDecisionsProvider','kindroid');
+        sessionStorage.setItem('badDecisionsKindroidKey',key);
+        sessionStorage.setItem('badDecisionsKindroidId',aiId);
+        sessionStorage.setItem('badDecisionsKindroidName',name);
+      }catch(_e){}
+
+      setApiStatus(`Connected to Kindroid: ${name}. Ready to make terrible choices. ✨`,'good');
+    }else{
+      setApiStatus('Asking Nomi who lives here…');
+      const data=await nomiFetch('/nomis');
+      const nomis=Array.isArray(data.nomis)?data.nomis:[];
+      if(!nomis.length) throw new Error('No Nomis found on this account');
+
+      apiState.connected=true;
+      apiState.nomis=nomis;
+
+      try{
+        sessionStorage.setItem('badDecisionsProvider','nomi');
+        sessionStorage.setItem('badDecisionsNomiKey',key);
+      }catch(_e){}
+
+      const select=$('nomiSelect');
+      select.innerHTML='';
+      for(const n of nomis){
+        const opt=document.createElement('option');
+        opt.value=n.uuid;
+        opt.textContent=n.name;
+        select.appendChild(opt);
+      }
+      const freddy=[...select.options].find(o=>o.textContent.toLowerCase()==='freddy');
+      if(freddy) select.value=freddy.value;
+      $('nomiSelectLabel').classList.remove('hidden');
+      setApiStatus(`Connected. Found ${nomis.length} Nomis. Choose your accomplice. ✨`,'good');
+    }
+  }catch(err){
+    apiState.connected=false;
+    apiState.nomis=[];
+    $('nomiSelectLabel').classList.add('hidden');
+    const message=err?.message||String(err)||'Unknown connection error';
+    setApiStatus(`Could not connect to ${providerLabel(provider)}: ${message}`,'bad');
+  }finally{
+    btn.disabled=false;
+    btn.textContent=provider==='kindroid'?'CONNECT KINDROID':'CONNECT NOMI';
+  }
+}
+
+function useMockMode(){
+  apiState.mock=true;
+  apiState.connected=false;
+  apiState.key='';
+  apiState.nomis=[];
+  $('nomiSelectLabel').classList.add('hidden');
+  setApiStatus('Mock companion mode armed. No API calls will be made.','good');
+}
+
+function flash(html,opts={}){
+  const f=$('actionFlash');
+  clearTimeout(s.flashTimer);
+  f.innerHTML=html;
+  f.className='actionFlash';
+  f.classList.remove('hidden');
+  f.classList.toggle('hotdogFlash',!!opts.hotdog);
+
+  const dismissNow=()=>{
+    f.classList.add('hidden');
+    if(typeof opts.onDismiss==='function') opts.onDismiss();
+  };
+
+  if(opts.hotdog){
+    const dismiss=document.createElement('button');
+    dismiss.className='flashButton';
+    dismiss.textContent='I HAVE ABSORBED THE HOTDOG WISDOM';
+    dismiss.onclick=dismissNow;
+    const gloat=document.createElement('button');
+    gloat.className='flashButton gloatButton';
+    gloat.textContent='GLOAT';
+    gloat.onclick=async()=>{
+      const text='🌭 '+opts.affirmation;
+      try{await navigator.clipboard.writeText(text);gloat.textContent='COPIED. GO GLOAT 😎'}
+      catch(e){gloat.textContent='GLOATING ENABLED 😎'}
+    };
+    const row=document.createElement('div');
+    row.className='flashActions';
+    row.append(gloat,dismiss);
+    f.appendChild(row);
+  } else if(opts.dismiss){
+    const dismiss=document.createElement('button');
+    dismiss.className='flashButton';
+    dismiss.textContent=opts.dismissText||'OKAY, CONTINUE THE CHAOS';
+    dismiss.onclick=dismissNow;
+    const row=document.createElement('div');
+    row.className='flashActions';
+    row.append(dismiss);
+    f.appendChild(row);
+  } else {
+    s.flashTimer=setTimeout(()=>{
+      f.classList.add('hidden');
+      if(typeof opts.onDismiss==='function') opts.onDismiss();
+    },5200);
+  }
+}
+
+function talkFlash(name,text,onDismiss,meta='SHIT-TALK BREAK'){
+  const overlay=document.createElement('div');
+  overlay.className='talkFlash';
+  const label=document.createElement('div');
+  label.className='talkName';
+  label.textContent=`${meta} · ${name.toUpperCase()}`;
+  const body=document.createElement('div');
+  body.className='talkText';
+  body.textContent=text;
+  const sub=document.createElement('div');
+  sub.className='talkMeta';
+  sub.textContent='The enemy is required by law to wait while you two talk shit.';
+  const actions=document.createElement('div');
+  actions.className='talkActions';
+  const btn=document.createElement('button');
+  btn.textContent='CONTINUE, SMARTASS';
+  btn.onclick=()=>{overlay.remove(); if(typeof onDismiss==='function') onDismiss();};
+  actions.appendChild(btn);
+  overlay.append(label,body,sub,actions);
+  document.body.appendChild(overlay);
+}
+
+async function interactiveTalkBreak(name,initialText,onDone,opts={}){
+  const overlay=document.createElement('div');
+  overlay.className='talkFlash talkChatFlash';
+
+  const label=document.createElement('div');
+  label.className='talkName';
+  label.textContent=`SHIT-TALK BREAK · ${name.toUpperCase()}`;
+
+  const transcript=document.createElement('div');
+  transcript.className='talkTranscript';
+
+  function addBubble(who,text,kind){
+    const wrap=document.createElement('div');
+    wrap.className=`talkBubble ${kind}`;
+    const whoEl=document.createElement('div');
+    whoEl.className='talkWho';
+    whoEl.textContent=who;
+    const textEl=document.createElement('div');
+    textEl.className='talkBubbleText';
+    textEl.textContent=text;
+    wrap.append(whoEl,textEl);
+    transcript.appendChild(wrap);
+    transcript.scrollTop=transcript.scrollHeight;
+  }
+
+  if(initialText) addBubble(name,initialText,'nomiBubble');
+
+  const sub=document.createElement('div');
+  sub.className='talkMeta';
+  sub.textContent='Talk as long as you want. The enemy is legally frozen until you hit CONTINUE, SMARTASS.';
+
+  const composer=document.createElement('div');
+  composer.className='talkComposer';
+  const input=document.createElement('input');
+  input.className='talkInput';
+  input.placeholder=opts.playerStarts?`Start shit with ${name}...`:`Talk shit back to ${name}...`;
+  const send=document.createElement('button');
+  send.className='talkSend';
+  send.textContent='SEND IT';
+
+  const actions=document.createElement('div');
+  actions.className='talkActions';
+  const done=document.createElement('button');
+  done.textContent='CONTINUE, SMARTASS';
+  actions.appendChild(done);
+
+  let waiting=false;
+  async function sendReply(){
+    const text=input.value.trim();
+    if(!text||waiting)return;
+    waiting=true;
+    input.value='';
+    input.disabled=true;
+    send.disabled=true;
+    addBubble(s.playerName,text,'playerBubble');
+    log(`🗯️ <b>${escapeHTML(s.playerName)}:</b> ${escapeHTML(text)}`);
+
+    let reply;
+    if(s.mode==='real'){
+      try{
+        if(s.pendingContinuity){
+          try{ await s.pendingContinuity; }catch(_e){}
+        }
+        reply=await sendNomiMessage(opts.playerStarts && transcript.children.length===1 ? buildPlayerStartBanterPrompt(text) : buildBanterReplyPrompt(text));
+        reply=cleanNomiDisplayText(reply)||'...';
+      }catch(err){
+        reply=`Th

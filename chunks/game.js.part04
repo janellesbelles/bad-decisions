@@ -1,0 +1,166 @@
+me:'Reply-All Calendar Invite',emoji:'📧',hp:24,intro:'The meeting has become sentient and now includes everyone.',hit:[4,7]},
+    {name:'Microwave Fish Incident',emoji:'🐟',hp:28,intro:'The break room has become a chemical event.',hit:[4,8]},
+    {name:'Coworker Who Says Quick Question',emoji:'🧑‍💼',hp:31,intro:'It will not be quick.',hit:[5,9]},
+    {name:'FINAL BOSS: Mandatory Team-Building Exercise',emoji:'🧩',hp:45,intro:'Someone has distributed blindfolds and trust falls.',hit:[7,11]}
+  ]},
+  {name:'Furniture Store Labyrinth',emoji:'🛋️',description:'You came for one shelf. You now live here.',enemies:[
+    {name:'Allen Key Of Despair',emoji:'🔧',hp:22,intro:'It is one millimeter smaller than every useful tool.',hit:[3,6]},
+    {name:'Showroom Family Argument',emoji:'🛏️',hp:24,intro:'You have been cast as mediator against your will.',hit:[4,7]},
+    {name:'Warehouse Cart With Momentum',emoji:'🛒',hp:28,intro:'It has six boxes and no brakes.',hit:[4,8]},
+    {name:'Instruction Diagram Without Words',emoji:'📄',hp:30,intro:'The little cartoon person looks disappointed in you.',hit:[5,9]},
+    {name:'FINAL BOSS: Missing Part 47B',emoji:'🪛',hp:44,intro:'It was never in the box. The box insists otherwise.',hit:[7,10]}
+  ]},
+  {name:'Renaissance Faire Incident',emoji:'🏰',description:'A turkey leg, a lute, and one avoidable duel have converged.',enemies:[
+    {name:'Overcommitted Town Crier',emoji:'📜',hp:22,intro:'He has announced your arrival with several inaccuracies.',hit:[3,6]},
+    {name:'Turkey Leg Of Excess',emoji:'🍗',hp:25,intro:'It is larger than the bird should have been.',hit:[4,7]},
+    {name:'Knight Who Takes This Seriously',emoji:'🛡️',hp:29,intro:'He has challenged you over parking etiquette.',hit:[4,8]},
+    {name:'Lute Player With Boundary Issues',emoji:'🎶',hp:31,intro:'The song now includes your full name somehow.',hit:[5,9]},
+    {name:'FINAL BOSS: Joust Nobody Approved',emoji:'🐎',hp:48,intro:'Two horses, one lance, zero signed waivers.',hit:[7,12]}
+  ]},
+  {name:'Laundromat At Midnight',emoji:'🧺',description:'The dryers are humming, one sock is missing, and something is absolutely haunted.',enemies:[
+    {name:'Machine Eating Quarters',emoji:'🪙',hp:21,intro:'It swallowed the money and displayed zero remorse.',hit:[3,6]},
+    {name:'Single Damp Sock',emoji:'🧦',hp:24,intro:'It has survived three cycles and one friendship.',hit:[4,7]},
+    {name:'Dryer Door That Unlocks Early',emoji:'🚪',hp:27,intro:'It opens only when everything is still wet.',hit:[4,8]},
+    {name:'Cart With One Bad Wheel',emoji:'🛒',hp:29,intro:'It pulls hard left toward destiny.',hit:[5,8]},
+    {name:'FINAL BOSS: Industrial Washer Possession',emoji:'🌀',hp:45,intro:'The spin cycle has become theological.',hit:[7,11]}
+  ]},
+  {name:'Petting Zoo Liability',emoji:'🦙',description:'Every animal is technically friendly. This is not reassuring.',enemies:[
+    {name:'Llama With Boundary Issues',emoji:'🦙',hp:23,intro:'It has entered your personal space and rejected diplomacy.',hit:[3,7]},
+    {name:'Duck With Jurisdiction',emoji:'🦆',hp:24,intro:'It has decided this walkway belongs to it.',hit:[4,7]},
+    {name:'Cow Blocking One Exact Doorway',emoji:'🐄',hp:28,intro:'There are other doors. This is the important one.',hit:[4,8]},
+    {name:'Wheelbarrow Full Of Bees',emoji:'🐝',hp:32,intro:'Nobody remembers loading the bees.',hit:[5,9]},
+    {name:'FINAL BOSS: Rooster At 4:37 A.M.',emoji:'🐓',hp:46,intro:'Dawn is a suggestion. The rooster has rejected it.',hit:[7,11]}
+  ]},
+  {name:'Museum Gala Curse',emoji:'🏛️',description:'Formalwear, ancient artifacts, and terrible donor behavior.',enemies:[
+    {name:'Champagne Flute Near Artifact',emoji:'🥂',hp:22,intro:'The glass is tilting toward history.',hit:[3,6]},
+    {name:'Donor Who Knows The Curator',emoji:'🎩',hp:25,intro:'They have used the phrase do you know who I am twice.',hit:[4,7]},
+    {name:'Portrait Whose Eyes Follow You',emoji:'🖼️',hp:29,intro:'It has opinions about your shoes.',hit:[4,8]},
+    {name:'Security Rope With Ambition',emoji:'🪢',hp:30,intro:'It has become a trip hazard with institutional backing.',hit:[5,9]},
+    {name:'FINAL BOSS: Cursed Sarcophagus Opening',emoji:'⚰️',hp:48,intro:'The gala brochure specifically said this would not happen.',hit:[7,12]}
+  ]},
+  {name:'Grocery Delivery Blizzard',emoji:'🛒',description:'Six bags, black ice, one substituted avocado, and a customer three buildings away.',enemies:[
+    {name:'Cart Wheel Frozen Sideways',emoji:'🛒',hp:22,intro:'It will only travel diagonally now.',hit:[3,6]},
+    {name:'Bag Of Cans With No Handles',emoji:'🥫',hp:25,intro:'Gravity has entered the delivery window.',hit:[4,7]},
+    {name:'Customer Messaging Question Mark',emoji:'❓',hp:27,intro:'They sent only a question mark. Somehow this feels hostile.',hit:[4,8]},
+    {name:'Black Ice At The Exact Doorstep',emoji:'🧊',hp:31,intro:'The entire neighborhood is clear except this one square foot.',hit:[5,9]},
+    {name:'FINAL BOSS: Third-Floor Walk-Up With Six Drinks',emoji:'🥤',hp:47,intro:'There is no elevator. There is never an elevator.',hit:[7,12]}
+  ]}
+];
+
+const affirmations=[
+  'You’re cooking up something beautiful.',
+  'Tiny hotdog believes in you.',
+  'You are doing suspiciously well.',
+  'Keep going, condiment champion.',
+  'Your bad decisions have potential.',
+  'You have the mustard to continue.'
+];
+
+let s={};
+let selectedScenario=0;
+let apiState={connected:false,key:'',nomis:[],mock:false,provider:'nomi',kindroidId:'',kindroidName:''};
+const $=id=>document.getElementById(id);
+const API_BASE='https://api.nomi.ai/v1';
+const KINDROID_API_BASE='https://api.kindroid.ai/v1';
+const WEB_RELAY_BASE=String(window.BAD_DECISIONS_RELAY||'').replace(/\/$/,'');
+
+function requireWebRelay(){
+  if(!WEB_RELAY_BASE){
+    throw new Error('Pocket Goat relay is not configured yet. Set BAD_DECISIONS_RELAY in config.js.');
+  }
+  return WEB_RELAY_BASE;
+}
+
+async function relayCall(payload){
+  const relay=requireWebRelay();
+  const response=await fetch(`${relay}/api`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  const text=await response.text();
+  let data={};
+  try{data=JSON.parse(text);}catch(_e){data={raw:text};}
+  if(!response.ok) throw new Error(data?.error||data?.message||text||`HTTP ${response.status}`);
+  return data;
+}
+
+
+function escapeHTML(value=''){
+  return String(value).replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+
+function setApiStatus(message,kind=''){
+  const el=$('apiStatus');
+  el.textContent=message;
+  el.className='apiStatus'+(kind?` ${kind}`:'');
+}
+
+function isTauriDesktop(){
+  return !!(window.__TAURI__?.core?.invoke);
+}
+
+async function nomiFetch(path,options={}){
+  // Desktop mode: the Rust side makes the HTTPS request. This avoids browser CORS/file:// blocks.
+  if(isTauriDesktop()){
+    const invoke=window.__TAURI__.core.invoke;
+    if(path==='/nomis' && (!options.method || options.method==='GET')){
+      return await invoke('list_nomis',{apiKey:apiState.key});
+    }
+    const chatMatch=path.match(/^\/nomis\/([^/]+)\/chat$/);
+    if(chatMatch && options.method==='POST'){
+      let payload={};
+      try{ payload=JSON.parse(options.body||'{}'); }catch(_e){}
+      return await invoke('send_nomi_message',{
+        apiKey:apiState.key,
+        nomiUuid:decodeURIComponent(chatMatch[1]),
+        messageText:payload.messageText||''
+      });
+    }
+    throw new Error(`Desktop bridge does not support API path: ${path}`);
+  }
+
+  // Web/PWA mode: use the tiny relay so iPhone/Safari never has to fight provider CORS.
+  if(path==='/nomis' && (!options.method || options.method==='GET')){
+    return await relayCall({provider:'nomi',action:'list',apiKey:apiState.key});
+  }
+  const chatMatch=path.match(/^\/nomis\/([^/]+)\/chat$/);
+  if(chatMatch && options.method==='POST'){
+    let payload={};
+    try{payload=JSON.parse(options.body||'{}');}catch(_e){}
+    return await relayCall({
+      provider:'nomi',
+      action:'send',
+      apiKey:apiState.key,
+      companionId:decodeURIComponent(chatMatch[1]),
+      messageText:payload.messageText||''
+    });
+  }
+  throw new Error(`Web relay does not support Nomi path: ${path}`);
+}
+
+
+function providerLabel(provider=apiState.provider){
+  return provider==='kindroid'?'Kindroid':'Nomi';
+}
+
+function resetCompanionConnection(){
+  apiState.connected=false;
+  apiState.key='';
+  apiState.nomis=[];
+  apiState.mock=false;
+  $('nomiSelectLabel').classList.add('hidden');
+}
+
+function updateProviderUI(){
+  const provider=$('providerSelect').value;
+  apiState.provider=provider;
+  resetCompanionConnection();
+
+  const isKindroid=provider==='kindroid';
+  $('kindroidFields').classList.toggle('hidden',!isKindroid);
+  $('apiKey').placeholder=isKindroid?'Paste your Kindroid kn_ API key here':'Paste your Nomi API key here';
+  $('connectNomi').textContent=isKindroid?'CONNECT KINDROID':'CONNECT NOMI';
+
+  if(isKindroid){
+    setApiStatus('Not connected. Kindroid needs your API key 

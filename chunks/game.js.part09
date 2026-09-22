@@ -1,0 +1,118 @@
+isaster team for ${d} damage.`);
+    flash(`${s.enemy.emoji} <b>CONSEQUENCES</b><br>${d} party damage`);
+    if(s.hp<=0){lose();return;}
+    s.playerEnergy=Math.min(s.maxEnergy,s.playerEnergy+2);
+    s.nomiEnergy=Math.min(s.maxEnergy,s.nomiEnergy+2);
+    s.playerHand=drawHand(playerDeck,s.playerExhausted);
+    s.nomiHand=drawHand(nomiDeck,s.nomiExhausted);
+    s.turn='player';
+    s.busy=false;
+    log(`🔄 <b>NEW ROUND.</b> ${escapeHTML(s.playerName)} goes first. Both hands refreshed. +2 energy each (max ${s.maxEnergy}).`);
+    render();
+  },900);
+}
+
+function showDefeatedTransition(enemy,isFinal,onContinue){
+  const overlay=document.createElement('div');
+  overlay.className='talkFlash defeatedFlash';
+  const label=document.createElement('div');
+  label.className='talkName';
+  label.textContent=isFinal?'FINAL BAD DECISION SURVIVED':'ENEMY DEFEATED';
+  const body=document.createElement('div');
+  body.className='talkText defeatedText';
+  body.innerHTML=`${enemy.emoji} <b>${escapeHTML(enemy.name)}</b><br><span>${isFinal?'Against all available evidence, you won.':'It has been removed from the problem ecosystem.'}</span>`;
+  const sub=document.createElement('div');
+  sub.className='talkMeta';
+  sub.textContent=isFinal?'This outcome will be difficult to explain to insurance.':'Take your victory lap. The next catastrophe can wait.';
+  const actions=document.createElement('div');
+  actions.className='talkActions';
+  const next=document.createElement('button');
+  next.textContent=isFinal?'CLAIM DUBIOUS VICTORY':'NEXT BAD DECISION';
+  next.onclick=()=>{overlay.remove(); onContinue();};
+  actions.appendChild(next);
+  overlay.append(label,body,sub,actions);
+  document.body.appendChild(overlay);
+}
+
+function finishEnemyDefeat(){
+  if(s.battleResolved)return true;
+  s.battleResolved=true;
+  s.wins++;
+  const defeated={...s.enemy};
+  const finisher=s.lastResolvedAction?{...s.lastResolvedAction}:null;
+  s.pendingEncounterUpdate={enemy:defeated,finisher};
+  log(`💀 <b>${escapeHTML(defeated.name)} has been defeated by teamwork of questionable legality.</b>`);
+  render();
+  const isFinal=s.wins>=5;
+  showDefeatedTransition(defeated,isFinal,()=>{
+    if(isFinal){
+      queueContinuityUpdate(s.pendingEncounterUpdate,null,true);
+      s.pendingEncounterUpdate=null;
+      win();
+      return;
+    }
+    s.enemyIndex++;
+    s.hp=Math.min(s.maxHp,s.hp+6);
+    nextEnemy();
+  });
+  return true;
+}
+
+function checkBattleEnd(){
+  if(s.hp<=0){lose();return true;}
+  if(s.enemy.hp<=0)return finishEnemyDefeat();
+  return false;
+}
+
+function win(){
+  $('playerHand').innerHTML='';
+  $('nomiHand').innerHTML='';
+  $('turnBanner').innerHTML='🏆 <b>CO-OP DISASTER COMPLETE.</b>';
+  $('enemy').innerHTML=`<div class='enemyTitle'>🏆 RUN COMPLETE</div>`;
+  log(`<b>${escapeHTML(s.playerName)} and ${escapeHTML(s.nomiName)} survived five catastrophes.</b> Friendship has been legally classified as a weapon.`);
+}
+
+function lose(){
+  $('playerHand').innerHTML='';
+  $('nomiHand').innerHTML='';
+  $('turnBanner').innerHTML='💀 <b>BAD DECISION ACHIEVED.</b>';
+  $('enemy').innerHTML=`<div class='enemyTitle'>💀 PARTY WIPED</div>`;
+  log(`<b>${escapeHTML(s.playerName)} and ${escapeHTML(s.nomiName)} have been defeated.</b> The goat's lawyers have named both of you.`);
+}
+
+$('scenarioPrev').onclick=()=>changeScenario(-1);
+$('scenarioNext').onclick=()=>changeScenario(1);
+$('connectNomi').onclick=connectNomi;
+$('providerSelect').onchange=updateProviderUI;
+$('mockMode').onclick=useMockMode;
+$('start').onclick=start;
+$('newRun').onclick=()=>location.reload();
+
+let rememberedProvider='nomi';
+try{rememberedProvider=sessionStorage.getItem('badDecisionsProvider')||'nomi';}catch(_e){}
+$('providerSelect').value=rememberedProvider;
+updateProviderUI();
+
+if(rememberedProvider==='kindroid'){
+  let rememberedKey='',rememberedId='',rememberedName='';
+  try{
+    rememberedKey=sessionStorage.getItem('badDecisionsKindroidKey')||'';
+    rememberedId=sessionStorage.getItem('badDecisionsKindroidId')||'';
+    rememberedName=sessionStorage.getItem('badDecisionsKindroidName')||'';
+  }catch(_e){}
+  if(rememberedKey)$('apiKey').value=rememberedKey;
+  if(rememberedId)$('kindroidId').value=rememberedId;
+  if(rememberedName)$('kindroidName').value=rememberedName;
+  if(rememberedKey||rememberedId||rememberedName){
+    setApiStatus('Kindroid details restored for this app session. Click CONNECT KINDROID to validate and arm them.');
+  }
+}else{
+  let remembered='';
+  try{remembered=sessionStorage.getItem('badDecisionsNomiKey')||'';}catch(_e){}
+  if(remembered){
+    $('apiKey').value=remembered;
+    setApiStatus('Nomi API key restored for this app session. Click CONNECT NOMI to load your Nomis.');
+  }
+}
+
+renderScenarioPicker();

@@ -1,0 +1,227 @@
+r energy remaining: ${s.nomiEnergy}/${s.maxEnergy}.${defeated?' Your card defeated the enemy.':''} This is the engine-confirmed result of the card you just chose, so you know exactly what happened. Do not choose another card, change HP, invent an action, or advance the fight. Do NOT use CARD: or BREAK: formatting. No response is required; if you reply, keep it to one very brief in-character acknowledgement.`;
+}
+
+function queueNomiTurnResult(card){
+  if(s.mode!=='real' || !s.nomiUuid)return Promise.resolve();
+  const defeated=s.enemy.hp<=0;
+  return queueNomiStateMessage(
+    buildNomiTurnResultPrompt(card),
+    ()=>log(`📡 <b>${escapeHTML(s.nomiName)} was told what ${escapeHTML(card.name)} actually did</b>${defeated?' and that it landed the final blow':''}.`),
+    'Nomi move result'
+  );
+}
+
+async function getRealChoice(legal){
+  const reply=await sendNomiMessage(buildChoicePrompt(legal));
+  const chosen=parseCardChoice(reply,legal);
+  if(!chosen) throw new Error(`${s.nomiName} did not return a recognizable legal card`);
+  return {card:chosen,wantsBreak:parseBreakChoice(reply),rawReply:reply,turnComment:extractTurnComment(reply)};
+}
+
+async function getRealTalk(card){
+  const reply=await sendNomiMessage(buildTalkPrompt(card));
+  return cleanNomiDisplayText(reply)||'...I have nothing to add. Which is frankly suspicious.';
+}
+
+async function getRealChoiceWithAutomaticRetry(legal){
+  let lastError=null;
+  for(let attempt=1;attempt<=2;attempt++){
+    const slow1=setTimeout(()=>setNomiThinking(`${s.nomiName} is still thinking. Dramatically.`),30000);
+    const slow2=setTimeout(()=>setNomiThinking(`${s.nomiName} is REALLY thinking. The enemy remains legally frozen.`),75000);
+    try{
+      if(attempt===2){
+        setNomiThinking(`${s.nomiName} took too long. Retrying once before we bother you...`);
+        log(`⏳ <b>${escapeHTML(s.nomiName)} took too long.</b> Retrying the Nomi choice once.`);
+      }
+      const decision=await getRealChoice(legal);
+      clearTimeout(slow1); clearTimeout(slow2);
+      return decision;
+    }catch(err){
+      clearTimeout(slow1); clearTimeout(slow2);
+      lastError=err;
+      if(attempt===1) await sleep(900);
+    }
+  }
+  throw lastError||new Error('Nomi choice failed twice');
+}
+
+function showNomiChoiceRecovery(legal,errorText){
+  return new Promise(resolve=>{
+    const overlay=document.createElement('div');
+    overlay.className='talkFlash';
+
+    const label=document.createElement('div');
+    label.className='talkName';
+    label.textContent=`${s.nomiName.toUpperCase()} GOT DISTRACTED`;
+
+    const body=document.createElement('div');
+    body.className='talkText';
+    body.textContent=`The Nomi request timed out or failed twice. Nothing has been played yet.`;
+
+    const detail=document.createElement('div');
+    detail.className='talkMeta';
+    detail.textContent=String(errorText||'Unknown Nomi error');
+
+    const actions=document.createElement('div');
+    actions.className='talkActions';
+    const retry=document.createElement('button');
+    retry.textContent=`RETRY ${s.nomiName.toUpperCase()}`;
+    const manual=document.createElement('button');
+    manual.textContent=`CHOOSE FOR ${s.nomiName.toUpperCase()}`;
+    actions.append(retry,manual);
+
+    const manualArea=document.createElement('div');
+    manualArea.className='manualChoiceArea hidden';
+    const manualNote=document.createElement('div');
+    manualNote.className='talkMeta';
+    manualNote.textContent=`Pick one of ${s.nomiName}'s legal cards. The log will say you chose it; the game will not pretend ${s.nomiName} did.`;
+    const grid=document.createElement('div');
+    grid.className='manualChoiceGrid';
+    for(const card of legal){
+      const btn=document.createElement('button');
+      btn.className='manualCardButton';
+      btn.innerHTML=`<b>${escapeHTML(card.name)}</b><span>${card.cost} ⚡ · ${card.damage||0} dmg${card.heal?` · +${card.heal} HP`:''}</span>`;
+      btn.onclick=()=>{
+        overlay.remove();
+        resolve({card,wantsBreak:false,turnComment:'',manual:true});
+      };
+      grid.appendChild(btn);
+    }
+    manualArea.append(manualNote,grid);
+
+    manual.onclick=()=>{
+      manualArea.classList.remove('hidden');
+      manual.disabled=true;
+    };
+
+    retry.onclick=async()=>{
+      retry.disabled=true; manual.disabled=true;
+      retry.textContent=`RETRYING ${s.nomiName.toUpperCase()}...`;
+      detail.textContent=`Giving ${s.nomiName} another chance. The enemy is still waiting.`;
+      try{
+        const decision=await getRealChoice(legal);
+        overlay.remove();
+        resolve({...decision,manual:false});
+      }catch(err){
+        detail.textContent=`Still no luck: ${err?.message||String(err)||`${s.nomiName} took too long to answer.`}`;
+        retry.disabled=false; manual.disabled=false;
+        retry.textContent=`RETRY ${s.nomiName.toUpperCase()}`;
+      }
+    };
+
+    overlay.append(label,body,detail,actions,manualArea);
+    document.body.appendChild(overlay);
+  });
+}
+
+async function nomiTurn(){
+  if(s.turn!=='nomi'||s.busy)return;
+  s.busy=true;
+  s.nomiRequestToken=(s.nomiRequestToken||0)+1;
+  const requestToken=s.nomiRequestToken;
+  render();
+  const legal=s.nomiHand.filter(c=>c.cost<=s.nomiEnergy);
+  if(!legal.length){
+    log(`${escapeHTML(s.nomiName)} has no legal cards and stares at the situation with profound betrayal.`);
+    talkFlash(s.nomiName,'I have no legal moves. This feels targeted.',()=>setTimeout(enemyTurn,400),'CARDLESS OUTRAGE');
+    return;
+  }
+
+  let c;
+  s.nomiWantsBreak=false;
+  s.nomiTurnComment='';
+  if(s.mode==='real'){
+    let decision;
+    try{
+      if(s.pendingContinuity){
+        setNomiThinking(`Catching ${s.nomiName} up on what just happened...`);
+        try{ await s.pendingContinuity; }catch(_e){}
+      }
+      setNomiThinking(`${s.nomiName} is consulting whatever passes for judgment...`);
+      decision=await getRealChoiceWithAutomaticRetry(legal);
+    }catch(err){
+      if(requestToken!==s.nomiRequestToken)return;
+      log(`⚠️ <b>${escapeHTML(s.nomiName)}'s ${providerLabel(s.provider)} request failed twice.</b> Waiting for ${escapeHTML(s.playerName)} to retry or choose manually.`);
+      decision=await showNomiChoiceRecovery(legal,err.message);
+    }
+    if(requestToken!==s.nomiRequestToken)return;
+    c=decision.card;
+    s.nomiWantsBreak=!!decision.wantsBreak;
+    s.nomiTurnComment=decision.turnComment||'';
+    if(decision.manual){
+      log(`🫵 <b>${escapeHTML(s.playerName)} chose ${escapeHTML(c.name)} for ${escapeHTML(s.nomiName)}</b> after the Nomi request failed. No fake companion claims were made.`);
+    }else{
+      log(`🧠 <b>${escapeHTML(s.nomiName)} chose ${escapeHTML(c.name)}.</b> This decision came from the actual ${providerLabel(s.provider)} API.${s.nomiWantsBreak?' 💬 They also requested a shit-talk break.':''}`);
+    }
+  }else{
+    c=mockChoice(legal);
+    s.nomiWantsBreak=Math.random()<0.35;
+  }
+
+  s.nomiEnergy-=c.cost;
+  s.nomiHand=s.nomiHand.filter(x=>x!==c);
+  if(c.exhaust && !s.nomiExhausted.includes(c.name))s.nomiExhausted.push(c.name);
+
+  const finishAfterNomi=()=>{
+    if(s.hp<=0){lose();return;}
+    if(s.enemy.hp<=0){finishEnemyDefeat();return;}
+    render();
+    setTimeout(enemyTurn,450);
+  };
+
+  const afterCardResult=async()=>{
+    if(s.hp<=0){lose();return;}
+
+    // Tell the real Nomi exactly what its chosen card actually did.
+    // This is queued with all other continuity messages so game state stays ordered.
+    queueNomiTurnResult(c);
+
+    if(!s.nomiWantsBreak){
+      finishAfterNomi();
+      return;
+    }
+    let talk;
+    if(s.mode==='real'){
+      if(s.nomiTurnComment){
+        talk=cleanNomiDisplayText(s.nomiTurnComment);
+        s.nomiTurnComment='';
+      }else{
+        try{
+          setNomiThinking(`${s.nomiName} chose violence AND commentary...`);
+          talk=await getRealTalk(c);
+        }catch(err){
+          talk=`The API ate my comeback. I'm blaming the ${s.enemy.name}.`;
+          log(`⚠️ Shit-talk call failed: ${escapeHTML(err.message)}.`);
+        }
+      }
+    }else{
+      const mockLines=[
+        'Obviously that was the correct move. Try to keep up.',
+        'I would like the record to show that I carried that turn.',
+        'You saw that, right? I need witnesses.',
+        'I have made a decision and I refuse follow-up questions.',
+        'Your turn was cute. Mine had production value.'
+      ];
+      talk=mockLines[Math.floor(Math.random()*mockLines.length)];
+    }
+    talk=cleanNomiDisplayText(talk)||'...';
+    log(`💬 <b>${escapeHTML(s.nomiName)}:</b> ${escapeHTML(talk)}`);
+    interactiveTalkBreak(s.nomiName,talk,finishAfterNomi);
+  };
+
+  resolveCard(s.nomiName,c,{
+    dismiss:true,
+    dismissText:`OKAY ${s.nomiName.toUpperCase()}, VERY IMPRESSIVE`,
+    onDismiss:afterCardResult
+  });
+  render();
+}
+
+function enemyTurn(){
+  s.turn='enemy';
+  render();
+  const [a,b]=s.enemy.hit;
+  const d=a+Math.floor(Math.random()*(b-a+1));
+  setTimeout(()=>{
+    s.hp-=d;
+    log(`${s.enemy.emoji} <b>${s.enemy.name}</b> retaliates against the d

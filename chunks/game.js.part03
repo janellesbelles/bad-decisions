@@ -1,0 +1,85 @@
+ Line',emoji:'🚻',hp:27,intro:'It has achieved its own political system.',hit:[4,8]},
+    {name:'Neighbor In Pajamas',emoji:'😠',hp:31,intro:'They have crossed the street in slippers. This is serious.',hit:[5,9]},
+    {name:'FINAL BOSS: Folding Table Collapse',emoji:'💥',hp:44,intro:'The snacks have become airborne.',hit:[6,10]}
+  ]},
+  {name:'Absolutely Normal Farm Visit',emoji:'🚜',description:'You came to pet something fluffy. Agriculture chose violence.',enemies:[
+    {name:'Judgmental Chicken',emoji:'🐔',hp:21,intro:'It knows what you did and has zero evidence.',hit:[3,6]},
+    {name:'Goat On Unauthorized Structure',emoji:'🐐',hp:25,intro:'It is standing on the tractor. Nobody invited it onto the tractor.',hit:[4,7]},
+    {name:'Pig With A Bucket',emoji:'🐖',hp:27,intro:'The pig owns the bucket now. The bucket is important. You will not be told why.',hit:[4,8]},
+    {name:'Horse Experiencing Main Character Syndrome',emoji:'🐴',hp:31,intro:'It runs past dramatically despite nothing pursuing it.',hit:[5,9]},
+    {name:'FINAL BOSS: Tractor That Started Itself',emoji:'🚜',hp:46,intro:'The key is not in it. Explain that.',hit:[7,11]}
+  ]},
+  {name:'Your Order Is On The Way',emoji:'🍔',description:'You accepted one delivery. Now you are involved in regional logistics.',enemies:[
+    {name:'Apartment Complex With No Building Numbers',emoji:'🏢',hp:23,intro:'Every building is beige. Every door says 204.',hit:[3,7]},
+    {name:'Customer Who Says I Am Outside',emoji:'👁️',hp:25,intro:'No human being is visible in any direction.',hit:[4,7]},
+    {name:'Bag With Structural Concerns',emoji:'🛍️',hp:27,intro:'You can feel the fries reconsidering their commitments.',hit:[4,8]},
+    {name:'Drive-Thru Line That Has Become A Society',emoji:'🚗',hp:33,intro:'People have formed alliances. One Honda has been here since dawn.',hit:[5,9]},
+    {name:'FINAL BOSS: GPS Pin In A Retention Pond',emoji:'📍',hp:45,intro:'The app insists the customer lives in water.',hit:[7,11]}
+  ]},
+  {name:'Helicopter of Regret',emoji:'🚁',description:'A scenic rescue attempt becomes a louder emergency with blades.',enemies:[
+    {name:'Dangling Ski Instructor',emoji:'🎿',hp:24,intro:'Nobody is sure why they are dangling. The instructor appears offended by gravity.',hit:[4,7]},
+    {name:'Loose Safety Harness',emoji:'🪢',hp:26,intro:'It has become philosophical about attachment.',hit:[4,8]},
+    {name:'Judgmental Mountain Crow',emoji:'🐦‍⬛',hp:25,intro:'It has seen several rescues today and yours is embarrassing.',hit:[4,8]},
+    {name:'Fuel-Smelling Snowbank',emoji:'❄️',hp:31,intro:'The snow should not smell like that.',hit:[5,9]},
+    {name:'FINAL BOSS: Helicopter Of Regret',emoji:'🚁',hp:46,intro:'Nobody remembers calling it. Unfortunately, it has arrived.',hit:[7,11]}
+  ]},
+  {name:'Avalanche Wedding',emoji:'💍',description:'Love, family pressure, champagne, and geology all arrive at once.',enemies:[
+    {name:'Flower Girl With No Survival Instinct',emoji:'🌸',hp:22,intro:'She is sprinting toward the slope with petals and confidence.',hit:[3,6]},
+    {name:'Runaway Champagne Tower',emoji:'🥂',hp:25,intro:'It has achieved downhill momentum.',hit:[4,7]},
+    {name:'Officiant On Skis',emoji:'⛷️',hp:27,intro:'The vows are still happening somehow.',hit:[4,8]},
+    {name:'Aunt With Questions: Winter Edition',emoji:'👜',hp:32,intro:'She wants to know when everyone is having children before the snow settles.',hit:[5,9]},
+    {name:'FINAL BOSS: Ceremonial Snow Collapse',emoji:'🏔️',hp:47,intro:'The mountain has objections.',hit:[7,11]}
+  ]},
+  {name:'Ski Lift Hostage Situation',emoji:'🚠',description:'Suspended above the slope with nowhere to run and too much time to think.',enemies:[
+    {name:'Frozen Restraint Bar',emoji:'🥶',hp:23,intro:'It moved once and has chosen retirement.',hit:[3,6]},
+    {name:'Lost Mitten Oracle',emoji:'🧤',hp:24,intro:'It knows things now.',hit:[4,7]},
+    {name:'Cocoa Toddler',emoji:'☕',hp:26,intro:'Sticky, loud, and completely unconcerned with altitude.',hit:[4,7]},
+    {name:'Wind Gust With Opinions',emoji:'💨',hp:31,intro:'It has selected your side of the chair specifically.',hit:[5,9]},
+    {name:'FINAL BOSS: The Last Operational Ski Lift',emoji:'🚠',hp:44,intro:'A ten-minute ride has become a systems problem.',hit:[7,10]}
+  ]},
+  {name:'Après-Ski Catastrophe',emoji:'🍻',description:'Everyone survived the mountain just to get taken out by vibes indoors.',enemies:[
+    {name:'Wet Sock In Boot',emoji:'🧦',hp:21,intro:'No one is emotionally prepared for this sensation.',hit:[3,6]},
+    {name:'Fondue Pot Of Consequences',emoji:'🫕',hp:25,intro:'The cheese is now a legal hazard.',hit:[4,7]},
+    {name:'Bartender With Ideas',emoji:'🍹',hp:28,intro:'The special contains three ingredients and one lawsuit.',hit:[4,8]},
+    {name:'Guy Named Brent Doing Shots',emoji:'🥃',hp:32,intro:'Brent has announced a competition nobody entered.',hit:[5,9]},
+    {name:'FINAL BOSS: Dance Floor Medical Incident',emoji:'🪩',hp:45,intro:'The lodge was supposed to be the safe zone. Adorable.',hit:[7,11]}
+  ]}
+,
+  {name:'Cabin Weekend Structural Error',emoji:'🏚️',description:'The listing said rustic. The cabin interpreted that as permission.',enemies:[
+    {name:'Passive-Aggressive Fireplace',emoji:'🔥',hp:23,intro:'It refuses to draw properly and somehow seems smug about it.',hit:[3,7]},
+    {name:'Fondue Emergency',emoji:'🫕',hp:25,intro:'The cheese has crossed from meal into event.',hit:[4,7]},
+    {name:'Bear At The Window',emoji:'🐻',hp:29,intro:'It is looking in like it paid for the rental.',hit:[5,8]},
+    {name:'Staircase With Moisture',emoji:'🪜',hp:30,intro:'Every step is an informed consent form.',hit:[5,9]},
+    {name:'FINAL BOSS: Load-Bearing Decorative Beam',emoji:'🪵',hp:45,intro:'It is decorative only in the legal sense.',hit:[7,11]}
+  ]},
+  {name:'Bear With Intent',emoji:'🐻',description:'A large bear arrives with timing, confidence, and unclear legal boundaries.',enemies:[
+    {name:'Cooler Bandit',emoji:'🧊',hp:23,intro:'The cooler is leaving. Nobody has authorized this.',hit:[3,7]},
+    {name:'Picnic Raider',emoji:'🥪',hp:26,intro:'Lunch has become negotiable property.',hit:[4,7]},
+    {name:'Ranger On Break',emoji:'🧢',hp:27,intro:'They are technically present but spiritually elsewhere.',hit:[4,8]},
+    {name:'Tourist Who Says It Is Friendly',emoji:'📸',hp:30,intro:'The tourist is approaching the bear. This is now everyone’s problem.',hit:[5,9]},
+    {name:'FINAL BOSS: Bear With Intent',emoji:'🐻',hp:48,intro:'It is not random. It has a plan. You are unfortunately part of it.',hit:[7,12]}
+  ]},
+  {name:'Snowmobile Poor Choice',emoji:'🏍️',description:'You touched a machine built entirely out of overconfidence.',enemies:[
+    {name:'Missing Trail Marker',emoji:'🪧',hp:22,intro:'The trail marker has opted out of guidance.',hit:[3,6]},
+    {name:'Backseat Screamer',emoji:'😱',hp:24,intro:'They are helping by making the problem louder.',hit:[4,7]},
+    {name:'Suspicious Frozen Lake',emoji:'🧊',hp:30,intro:'The lake has a tone.',hit:[5,8]},
+    {name:'Helmet Hair Delusion',emoji:'🪖',hp:29,intro:'Confidence has survived. The hairstyle has not.',hit:[5,8]},
+    {name:'FINAL BOSS: Snowmobile Currently Becoming Evidence',emoji:'🏍️',hp:46,intro:'Nobody needed to floor it. Yet here we are.',hit:[7,11]}
+  ]},
+  {name:'Black Diamond Delusion',emoji:'⛷️',description:'Someone said you would be fine. That person is not here.',enemies:[
+    {name:'Mogul Of Doom',emoji:'🏔️',hp:23,intro:'The bump has become a moral test.',hit:[3,7]},
+    {name:'Rogue Ski',emoji:'🎿',hp:25,intro:'It has left the group chat.',hit:[4,7]},
+    {name:'Ice Patch With Intent',emoji:'🧊',hp:28,intro:'It waited specifically for confidence.',hit:[4,8]},
+    {name:'Competitive Stranger',emoji:'😎',hp:30,intro:'They said race you and did not wait for consent.',hit:[5,9]},
+    {name:'FINAL BOSS: The Run Nobody Should Have Attempted',emoji:'⛰️',hp:47,intro:'This was never your lane. Unfortunately it is now your entire downhill identity.',hit:[7,12]}
+  ]},
+  {name:'Aquarium After Hours',emoji:'🐠',description:'The gift shop is closed, the lights are low, and the fish have unionized.',enemies:[
+    {name:'Touch Tank With Opinions',emoji:'🖐️',hp:22,intro:'Something in the water has judged your technique.',hit:[3,6]},
+    {name:'Penguin On Unauthorized Tour',emoji:'🐧',hp:25,intro:'It has left its enclosure and developed a route.',hit:[4,7]},
+    {name:'Octopus With A Keycard',emoji:'🐙',hp:29,intro:'Nobody gave it access. It has access anyway.',hit:[4,8]},
+    {name:'Gift Shop Shark Plush Army',emoji:'🦈',hp:31,intro:'They were decorative until the lights went out.',hit:[5,9]},
+    {name:'FINAL BOSS: Aquarium Tunnel Crack',emoji:'🌊',hp:47,intro:'The ceiling is technically still glass. For now.',hit:[7,12]}
+  ]},
+  {name:'Office Potluck Emergency',emoji:'🥘',description:'Everyone brought one dish and several HR concerns.',enemies:[
+    {name:'Unlabeled Crockpot',emoji:'🍲',hp:22,intro:'It is warm. It is bubbling. It refuses identification.',hit:[3,6]},
+    {na
