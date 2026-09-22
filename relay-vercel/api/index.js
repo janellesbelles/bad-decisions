@@ -1,12 +1,12 @@
 const NOMI='https://api.nomi.ai/v1';
 const KINDROID='https://api.kindroid.ai/v1';
-const ALLOWED_ORIGIN='https://janellesbelles.github.io';
 
 function cors(res){
-  res.setHeader('Access-Control-Allow-Origin',ALLOWED_ORIGIN);
-  res.setHeader('Vary','Origin');
+  // Safari is picky about preflight + deployment redirects. This relay carries
+  // no server-side secret, so allow browser origins and keep requests stateless.
+  res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Headers','Content-Type');
-  res.setHeader('Access-Control-Allow-Methods','POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
   res.setHeader('Cache-Control','no-store');
 }
 
@@ -23,7 +23,14 @@ async function readJsonResponse(resp){
 
 export default async function handler(req,res){
   cors(res);
+
   if(req.method==='OPTIONS') return res.status(204).end();
+
+  // Tiny health check so we can verify the relay directly in Safari.
+  if(req.method==='GET'){
+    return res.status(200).json({ok:true,service:'bad-decisions-relay'});
+  }
+
   if(req.method!=='POST') return res.status(405).json({error:'POST only'});
 
   try{
