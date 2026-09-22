@@ -28,7 +28,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq imagemagick
-          convert site/bad-decisions-social.jpg -filter Lanczos -resize 1200x630! -unsharp 0x0.8+0.8+0.02 -quality 92 site/bad-decisions-social-v2.jpg
+          convert -background none site/social-preview.svg -quality 94 site/bad-decisions-social-v3.jpg
       - uses: actions/configure-pages@v5
         with:
           enablement: true
