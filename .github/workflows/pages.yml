@@ -24,6 +24,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Rebuild game bundle
         run: cat chunks/game.js.part* > site/game.js
+      - name: Build crisp social preview
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq imagemagick
+          convert site/bad-decisions-social.jpg -filter Lanczos -resize 1200x630! -unsharp 0x0.8+0.8+0.02 -quality 92 site/bad-decisions-social-v2.jpg
       - uses: actions/configure-pages@v5
         with:
           enablement: true
